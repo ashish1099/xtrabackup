@@ -9,7 +9,7 @@
 #
 # Required Module Parameters
 # --------
-# 
+#
 # `backup_dir`
 # Location to store the backup files (default: '') [REQUIRED]
 #
@@ -91,7 +91,7 @@
 # --------
 #
 # Minimal installation using default settings:
-# 
+#
 # class { ::xtrabackup:
 #   backup_dir => '/mnt/backup/',
 #   mysql_user => 'backup_user',
@@ -174,9 +174,9 @@ class xtrabackup (
   $innobackupx_options = '',
   $logfile = '/var/log/xtrabackup.log',
   $manage_repo = true,
-  
-  
+  Optional[Stdlib::Unixpath] $last_borgbackup = undef,
 ){
+
   # Validate arguments
   validate_string($package_version)
   validate_bool($use_innobackupx)
@@ -189,9 +189,10 @@ class xtrabackup (
   validate_string($mysql_user)
   validate_string($mysql_pass)
   validate_bool($enable_cron)
-  
-  class {'::xtrabackup::repo': } ->
-  class {'::xtrabackup::install': } ->
-  class {'::xtrabackup::cron': }
+
+
+  class {'::xtrabackup::repo': }
+  -> class {'::xtrabackup::install': }
+  -> class {'::xtrabackup::cron': }
 
 }

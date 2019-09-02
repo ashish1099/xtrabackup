@@ -13,6 +13,9 @@ XTRABACKUP_OPTIONS='<%= @xtrabackup_options %>'
 INNOBACKUPX_OPTIONS='<%= @innobackupx_otions %>'
 LOGFILE='<%= @logfile %>'
 BACKUP_LOCATION="${BACKUP_DIR}/`date +%F`"
+<% unless @last_borgbackup.nil? -%>
+TEMP_LAST_BORGBACKUP="<%= @last_borgbackup %>"
+<% end -%>
 
 ## ================================================
 ## FUNCTIONS
@@ -84,5 +87,23 @@ else
 fi
 
 if [ ${PRUNE_BACKUPS} == true ]; then
+  <% unless @last_borgbackup.nil? -%>
+  if [ -f "${TEMP_LAST_BORGBACKUP}" ]; then
+    if test $(find "${TEMP_LAST_BORGBACKUP}" -mmin +1440)
+    then
+      log "The borg check has failed to touch the tmpfile, run borg check command to findout"
+      exit 1
+    fi
+    if test $(cat "${TEMP_LAST_BORGBACKUP}") -ne 0
+    then
+      log "The borg check command didnt ended up with exit code 0, so something is wrong. Start with borg list"
+      exit 1
+    fi
+  else
+   log "There is no temp file created from borg backup, so check borg timer"
+    exit 1
+  fi
+  <% end -%>
+
   run_prune_backups
 fi
