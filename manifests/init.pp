@@ -155,44 +155,32 @@
 # Copyright 2016 John Clark, WTFPL
 #
 class xtrabackup (
-  $package_version = 'latest',
-  $install_xtrabackup_bin = true,
-  $prune_backups = true,
-  $backup_retention = '7',
-  $backup_dir = '', # Required
-  $use_innobackupx = false,
-  $backup_script_location = '/usr/local/bin/',
-  $mysql_user = '', # Required
-  $mysql_pass = '', # Required
-  $enable_cron = true,
-  $cron_hour = '1', # Cronjob defaults for daily at 1AM
-  $cron_minute = '0',
-  $cron_weekday = '*',
-  $cron_month = '*',
-  $cron_monthday = '*',
-  $xtrabackup_options = '',
-  $innobackupx_options = '',
-  $logfile = '/var/log/xtrabackup.log',
-  $manage_repo = true,
-  Optional[Stdlib::Unixpath] $last_borgbackup = undef,
+  Cron::Package_state        $package_version        = 'latest',
+  Boolean                    $install_xtrabackup_bin = true,
+  Boolean                    $prune_backups          = true,
+  Integer                    $backup_retention       = '7',
+  Stdlib::Unixpath           $backup_dir             = '',
+  Boolean                    $use_innobackupx        = false,
+  Stdlib::Unixpath           $backup_script_location = '/usr/local/bin/',
+  String                     $mysql_user             = '',
+  String                     $mysql_pass             = '',
+  Cron::Job_ensure           $ensure_cron            = 'present',
+  Cron::Hour                 $cron_hour              = 1,
+  Cron::Minute               $cron_minute            = 0,
+  Cron::Weekday              $cron_weekday           = '*',
+  Cron::Month                $cron_month             = '*',
+  Cron::Date                 $cron_monthday          = '*',
+  String                     $xtrabackup_options     = '',
+  String                     $innobackupx_options    = '',
+  Stdlib::Unixpath           $logfile                = '/var/log/xtrabackup.log',
+  Boolean                    $manage_repo            = true,
+  Optional[Stdlib::Unixpath] $last_borgbackup        = undef,
 ){
 
-  # Validate arguments
-  validate_string($package_version)
-  validate_bool($use_innobackupx)
-  validate_bool($install_xtrabackup_bin)
-  validate_bool($manage_repo)
-  validate_bool($prune_backups)
-  validate_integer($backup_retention)
-  validate_absolute_path($backup_dir)
-  validate_absolute_path($backup_script_location)
-  validate_string($mysql_user)
-  validate_string($mysql_pass)
-  validate_bool($enable_cron)
+  contain 'xtrabackup::repo'
+  contain 'xtrabackup::install'
+  contain 'xtrabackup::cron'
 
-
-  class {'::xtrabackup::repo': }
-  -> class {'::xtrabackup::install': }
-  -> class {'::xtrabackup::cron': }
+  Class['xtrabackup::repo'] -> Class['xtrabackup::install'] -> Class['xtrabackup::cron']
 
 }
